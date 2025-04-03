@@ -23,7 +23,7 @@ A modern, secure, and user-friendly multisignature wallet on Chromia interface b
 
 1. Clone the repository:
 ```bash
-git clone [repository-url]
+git clone git@github.com:threes-studio/chromia-multisig-fe.git
 cd chromia-multisig-fe
 ```
 
