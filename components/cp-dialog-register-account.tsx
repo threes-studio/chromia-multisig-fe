@@ -15,6 +15,7 @@ import Link from "next/link";
 import useChromia from "@/hooks/use-chromia";
 import { toast } from "react-hot-toast";
 import { Copy, ExternalLink } from "lucide-react";
+import useBlockchainStore from "@/store/use-blockchain-store";
 
 const CpDialogRegisterAccount = () => {
   const { getAccountIdForNewAccount, registerAccountToChromia } = useChromia();
@@ -22,6 +23,8 @@ const CpDialogRegisterAccount = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [open, setOpen] = useState(false);
+  const [isRegistered, setIsRegistered] = useState(false);
+  const { currentBlockchain } = useBlockchainStore();
 
   const handleCopy = () => {
     if (!accountId) return;
@@ -35,13 +38,18 @@ const CpDialogRegisterAccount = () => {
       toast.error("Account ID is missing!");
       return;
     }
+    if (!currentBlockchain || !currentBlockchain.feeSymbol) {
+      toast.error("No fee asset symbol found");
+      return;
+    }
 
     setIsProcessing(true);
     setIsLoading(true);
     try {
-      await registerAccountToChromia(accountId);
+      await registerAccountToChromia(accountId, currentBlockchain.feeSymbol);
       toast.success("Account successfully registered!");
       setOpen(false);
+      setIsRegistered(true);
     } catch (e) {
       toast.error((e as Error).message || "Failed to register account. Please try again.");
     } finally {
@@ -63,7 +71,7 @@ const CpDialogRegisterAccount = () => {
     <div className="flex flex-wrap gap-x-5 gap-y-4 ">
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button>Register Account</Button>
+          {!isRegistered && <Button>Register Account</Button>}
         </DialogTrigger>
         <DialogContent size="lg" overlayClass=" bg-linear-to-b from-background/60 to-primary/30">
           <DialogHeader>
@@ -73,7 +81,7 @@ const CpDialogRegisterAccount = () => {
           </DialogHeader>
 
           <p className="my-6 text-sm font-medium text-default-700">
-            To register, send a <span className="font-bold text-primary">2 USDC</span> registration fee to the account below. Once the transfer is successful, click the "Create Account" button to complete the process.
+            To register, send a <span className="font-bold text-primary">{currentBlockchain?.feeValue} {currentBlockchain?.feeSymbol}</span> registration fee to the account below. Once the transfer is successful, click the "Create Account" button to complete the process.
           </p>
           <div className="flex items-center gap-2">
             <Input

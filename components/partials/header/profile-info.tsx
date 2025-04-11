@@ -13,6 +13,7 @@ import { useAccount, useBalance, useDisconnect, useConnect } from "wagmi";
 import { Icon } from "@iconify/react";
 import useChromia from "@/hooks/use-chromia";
 import CpDialogRegisterAccount from "@/components/cp-dialog-register-account";
+import useBlockchainStore from "@/store/use-blockchain-store";
 
 const ProfileInfo = () => {
   const { address } = useAccount();
@@ -20,6 +21,7 @@ const ProfileInfo = () => {
   const { disconnect } = useDisconnect();
   const { connect, connectors } = useConnect();
   const { checkAccountChromiaExist, loginToChromia } = useChromia();
+  const { currentBlockchain } = useBlockchainStore();
   const [accountExist, setAccountExist] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -49,7 +51,7 @@ const ProfileInfo = () => {
     if (address) {
       handleLoginChromia()
     }
-  }, [address]);
+  }, [address, currentBlockchain?.rid]);
 
   const formattedBalance = balance
     ? `${parseFloat(balance.formatted).toFixed(4)} ${balance.symbol}`

@@ -5,8 +5,10 @@ import { getSummary } from "@/config/api/app/routes";
 import { CupBar, NoteIcon, CheckShape, Spam } from "@/components/svg";
 import { cn } from "@/lib/utils";
 import { Icon } from "@iconify/react";
+import useBlockchainStore from "@/store/use-blockchain-store";
 
 const SummaryStats = () => {
+  const { currentBlockchain } = useBlockchainStore();
   const [summary, setSummary] = useState({
     totalUsers: 0,
     totalAccounts: 0,
@@ -15,35 +17,37 @@ const SummaryStats = () => {
   });
 
   useEffect(() => {
+    if (!currentBlockchain) return;
+
     const fetchSummary = async () => {
-      const data = await getSummary();
+      const data = await getSummary(currentBlockchain?.rid || '');
       setSummary(data);
     };
     fetchSummary();
-  }, []);
+  }, [currentBlockchain]);
 
   const data = [
     {
       text: "All users",
-      total: summary.totalUsers,
+      total: summary.totalUsers || 0,
       color: "warning",
       icon: <NoteIcon className="w-3.5 h-3.5" />,
     },
     {
       text: "Total Accounts",
-      total: summary.totalAccounts,
+      total: summary.totalAccounts || 0,
       color: "destructive",
       icon: <Spam className="w-3.5 h-3.5" />,
     },
     {
       text: "Completed Txs",
-      total: summary.completedTxs,
+      total: summary.completedTxs || 0,
       color: "success",
       icon: <CheckShape className="w-3.5 h-3.5" />,
     },
     {
       text: "Pending Txs",
-      total: summary.pendingTxs,
+      total: summary.pendingTxs || 0,
       color: "primary",
       icon: <CupBar className="w-3.5 h-3.5" />,
     },

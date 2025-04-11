@@ -193,3 +193,7 @@ export function bufferToHex(buffer: Buffer) {
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
 }
+export function capitalizeFirstLetter(val: string) {
+  return String(val).charAt(0).toUpperCase() + String(val).slice(1);
+}
+

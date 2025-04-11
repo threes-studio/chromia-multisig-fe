@@ -26,6 +26,7 @@ import { useForm, Controller } from "react-hook-form";
 import useChromia from "@/hooks/use-chromia";
 import { createTransaction } from "@/config/api/transactions/routes";
 import { useAccount } from "wagmi";
+import useBlockchainStore from "@/store/use-blockchain-store";
 
 const types = [
   { value: "transferFund", label: "Transfer Fund" },
@@ -52,6 +53,7 @@ export default function CreateTransaction({
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const { signTransferAssetTx, createTransferAssetTx } = useChromia();
   const { address: userAddress } = useAccount();
+  const { currentBlockchain } = useBlockchainStore();
 
   const searchParams = useSearchParams();
   const accountIdFromParams = searchParams.get("accountId");
@@ -87,9 +89,10 @@ export default function CreateTransaction({
         const response = await getAccounts({
           limit: 100,
           select: "id,name,accountId,mainDescriptor",
-          filter: "status,signers.pubKey",
+          filter: "status,signers.pubKey,blockchainRid",
           status: "created",
-          'signers.pubKey': userAddress, // Add address filter
+          'signers.pubKey': userAddress,
+          blockchainRid: currentBlockchain?.rid,
         });
         const formattedAccounts = response.data.map((account: any) => ({
           value: account.id,
@@ -106,7 +109,7 @@ export default function CreateTransaction({
           );
           if (matchingAccount) {
             setValue("account", matchingAccount);
-            setIsDrawerOpen(true); // Open the drawer
+            setIsDrawerOpen(true);
           }
         }
       } catch (error) {
@@ -117,7 +120,7 @@ export default function CreateTransaction({
     };
 
     fetchAccounts();
-  }, [accountIdFromParams, userAddress, setValue]);
+  }, [accountIdFromParams, userAddress, setValue, currentBlockchain?.rid]);
 
   useEffect(() => {
     if (!account) return;
@@ -130,6 +133,7 @@ export default function CreateTransaction({
           value: asset.symbol,
           label: asset.symbol,
           amount: asset.amount,
+          decimals: asset.decimals,
           id: asset.id,
         }));
         setAssets(formattedAssets);
@@ -172,6 +176,10 @@ export default function CreateTransaction({
       if (!selectedAsset) {
         return;
       }
+      if (data.recipient.toLowerCase() === data.account.accountId.toLowerCase()) {
+        toast.error("Recipient cannot be the same as the account ID");
+        return;
+      }
 
       const payload: CreateTransactionType = {
         tx: '',
@@ -186,6 +194,7 @@ export default function CreateTransaction({
         recipient: data.recipient,
         amount: parseFloat(data.amount),
         assetSymbol: data.asset.value,
+        assetDecimals: data.asset.decimals,
         note: data.note,
         userAddress,
       };
@@ -195,8 +204,8 @@ export default function CreateTransaction({
         Buffer.from(selectedAsset.id, 'hex'),
         Buffer.from(data.recipient, 'hex'),
         {
-          value: BigInt(Math.floor(parseFloat(data.amount) * 10 ** 18)),
-          decimals: 18,
+          value: BigInt(Math.floor(parseFloat(data.amount) * 10 ** data.asset.decimals)),
+          decimals: data.asset.decimals,
         } as any,
       );
 
@@ -205,8 +214,8 @@ export default function CreateTransaction({
         Buffer.from(selectedAsset.id, 'hex'),
         Buffer.from(data.recipient, 'hex'),
         {
-          value: BigInt(Math.floor(parseFloat(data.amount) * 10 ** 18)),
-          decimals: 18,
+          value: BigInt(Math.floor(parseFloat(data.amount) * 10 ** data.asset.decimals)),
+          decimals: data.asset.decimals,
         } as any,
         Buffer.from(data.account.accountId, 'hex'),
       );

@@ -11,9 +11,11 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
 import { type Account as AccountType, getAccounts } from "@/config/api";
 import { useAccount } from "wagmi"; // Import useAccount
+import useBlockchainStore from "@/store/use-blockchain-store";
 
 const ViewAccount = () => {
   const { address } = useAccount(); // Get EVM address
+  const { currentBlockchain } = useBlockchainStore();
   const [open, setOpen] = useState<boolean>(false);
   const [openEdit, setOpenEdit] = useState<boolean>(false);
   const [selectedAccount, setSelectedAccount] = useState<AccountType | null>(null);
@@ -39,9 +41,10 @@ const ViewAccount = () => {
         direction: sortDirection,
         search: "accountId,name",
         q: debouncedKeyword,
-        filter: filterStatus ? "signers.pubKey,status" : "signers.pubKey",
+        filter: filterStatus ? "signers.pubKey,status,blockchainRid" : "signers.pubKey,blockchainRid",
         status: filterStatus || undefined,
         "signers.pubKey": address, // Add address to the filter
+        blockchainRid: currentBlockchain?.rid,
       });
       setAccounts(response.data);
       setTotal(response.total);
@@ -52,7 +55,7 @@ const ViewAccount = () => {
 
   useEffect(() => {
     fetchAccounts(page);
-  }, [page, sortField, sortDirection, debouncedKeyword, filterStatus, address]);
+  }, [page, sortField, sortDirection, debouncedKeyword, filterStatus, address, currentBlockchain?.rid]);
 
   // Debounce effect for keyword
   useEffect(() => {

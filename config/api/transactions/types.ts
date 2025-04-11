@@ -6,6 +6,7 @@ const transaction = {
   "assetSymbol": "BTC",
   "note": "",
   "multiSigAccount": account,
+  "assetDecimals": 18,
   "signers": [
     {
       "name": "Khan Signer",
@@ -97,6 +98,7 @@ export type CreateTransaction = {
   amount: number;
   assetSymbol: string;
   assetId: string;
+  assetDecimals: number;
   note: string;
   tx: string;
   signature: {

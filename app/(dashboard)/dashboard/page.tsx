@@ -7,7 +7,7 @@ const HomePage = () => {
     <div className="space-y-6">
       <div className="flex items-center flex-wrap justify-between gap-4">
         <div className="text-2xl font-medium text-default-800">
-          Home
+          Dashboard
         </div>
       </div>
 

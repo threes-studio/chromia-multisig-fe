@@ -10,9 +10,11 @@ import TransactionTable from "./components/transaction-table";
 import { getTransactions } from "@/config/api/transactions/routes";
 import { Transaction } from "@/config/api/transactions/types";
 import { useAccount } from "wagmi"; // Import useAccount
+import useBlockchainStore from "@/store/use-blockchain-store";
 
 const DataTablePage = () => {
   const { address } = useAccount(); // Get EVM address
+  const { currentBlockchain } = useBlockchainStore();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [page, setPage] = useState<number>(1);
@@ -31,9 +33,10 @@ const DataTablePage = () => {
         limit: pageSize,
         search: "txRid,type",
         q: searchQuery,
-        filter: status ? "signers.pubKey,status" : "signers.pubKey",
+        filter: status ? "signers.pubKey,status,blockchainRid" : "signers.pubKey,blockchainRid",
         status,
         "signers.pubKey": address, // Pass the EVM address to the API
+        blockchainRid: currentBlockchain?.rid,
         populate: 'multiSigAccount'
       });
       setTransactions(response.data);
@@ -57,7 +60,7 @@ const DataTablePage = () => {
 
   useEffect(() => {
     debounceFetchTransactions(search, statusFilter);
-  }, [search, statusFilter, page, pageSize, address]);
+  }, [search, statusFilter, page, pageSize, address, currentBlockchain?.rid]);
 
   return (
     <div className="space-y-5">
@@ -89,7 +92,7 @@ const DataTablePage = () => {
               isLoading={isTableLoading}
               onSearchChange={setSearch}
               onFilterChange={setStatusFilter}
-              reloadData={() => fetchTransactions(search, statusFilter)} // Pass reloadData
+              reloadData={() => fetchTransactions(search, statusFilter)}
             />
           )}
         </CardContent>

@@ -46,6 +46,7 @@ import CpSignerAvatarList from "@/components/cp-signer-avatar-list";
 import { Account as AccountType, transferFee } from '@/config/api'
 import { useAccount } from "wagmi";
 import { Menu } from "lucide-react";
+import useBlockchainStore from "@/store/use-blockchain-store";
 
 const statusColors: { [key: string]: any } = {
   pending: "secondary",
@@ -79,6 +80,7 @@ const AccountTable = ({
 }) => {
   const { address: userAddress } = useAccount();
   const { signCreateMultisigAccount, createRegisterAccountTx, transferFeeToAccount } = useChromia();
+  const { currentBlockchain } = useBlockchainStore();
   const isDesktop = useMediaQuery("(max-width: 1280px)");
   const [loadingId, setLoadingId] = React.useState<string | null>(null);
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -89,8 +91,13 @@ const AccountTable = ({
 
   const handleTransferFee = async ({ id, accountId }: { id: string, accountId: string }) => {
     setLoadingId(id);
+    if (!currentBlockchain || !currentBlockchain?.feeId) {
+      toast.error("No fee asset ID found");
+      return;
+    }
+
     try {
-      const isSent = await transferFeeToAccount(accountId, 2);
+      const isSent = await transferFeeToAccount(accountId, currentBlockchain.feeValue, currentBlockchain.feeId, currentBlockchain.feeDecimals);
       if (isSent) {
         await transferFee(id);
         toast.success("Transfer fee successful");
@@ -107,18 +114,24 @@ const AccountTable = ({
 
   const handleRegister = async (account: AccountType) => {
     if (!userAddress) return;
+    if (!currentBlockchain || !currentBlockchain?.feeId) {
+      toast.error("No fee asset ID found");
+      return;
+    }
 
     setLoadingId(account.id);
     try {
       const authorSignature = await signCreateMultisigAccount(
         account.signers.map(s => s.pubKey),
         account.signaturesRequired,
+        currentBlockchain.feeSymbol,
       );
 
       const tx = await createRegisterAccountTx(
         [authorSignature],
         account.signers.map(s => s.pubKey),
         account.signaturesRequired,
+        currentBlockchain.feeSymbol
       );
 
       const encodeSig = {
@@ -171,7 +184,7 @@ const AccountTable = ({
       header: "Account Id",
       cell: ({ row }) => (
         <div>
-          <CpAddress address={row.getValue("accountId")} type="chromia" />
+          <CpAddress address={row.getValue("accountId")} type="account" />
         </div>
       ),
     },
@@ -254,7 +267,7 @@ const AccountTable = ({
             {status === "transferFee" && (
               <Button
                 onClick={() => handleRegister(account)}
-                disabled={loadingId === accountId}
+                disabled={loadingId === accountId || (userAddress !== account.userAddress)}
                 className="p-0 h-auto hover:bg-transparent bg-transparent text-primary hover:text-primary/80 hover:underline"
               >
                 {loadingId === accountId ? "Processing..." : "Register"}

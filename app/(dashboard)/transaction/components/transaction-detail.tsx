@@ -100,8 +100,19 @@ const TransactionDetail = ({ transaction }: { transaction: Transaction }) => {
 
               {transaction.recipient && (
                 <div className="text-left">
+                  <Label>From:</Label>
+                  <p className="text-sm text-gray-600">
+                    <CpAddress address={transaction.accountId} type="account" truncate={false} />
+                  </p>
+                </div>
+              )}
+
+              {transaction.recipient && (
+                <div className="text-left">
                   <Label>Recipient:</Label>
-                  <p className="text-sm text-gray-600">{`${transaction.recipient}`}</p>
+                  <p className="text-sm text-gray-600">
+                    <CpAddress address={transaction.recipient} type="account" truncate={false} />
+                  </p>
                 </div>
               )}
 

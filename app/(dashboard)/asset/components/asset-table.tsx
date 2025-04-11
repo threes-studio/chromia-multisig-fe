@@ -19,9 +19,11 @@ import {
 import { ChevronDown } from "lucide-react";
 import { truncateAddress } from "@/lib/utils";
 import { useAccount } from "wagmi"; // Import useAccount
+import useBlockchainStore from "@/store/use-blockchain-store";
 
 const AssetTable = () => {
   const { address } = useAccount(); // Get EVM address
+  const { currentBlockchain } = useBlockchainStore();
   const [accounts, setAccounts] = useState<{ id: string; name: string; accountId: string }[]>([]);
   const [selectedAccount, setSelectedAccount] = useState<{ id: string; name: string } | null>(null);
   const [assets, setAssets] = useState<{ symbol: string; name: string; amount: string; iconUrl: string }[]>([]);
@@ -31,11 +33,12 @@ const AssetTable = () => {
 
   useEffect(() => {
     const fetchAccounts = async () => {
-      if (!address) return; // Ensure address is available
+      if (!address) return;
       try {
         const data = await getAccounts({
-          filter: "signers.pubKey",
-          "signers.pubKey": address, // Pass the EVM address to the API
+          filter: "signers.pubKey,blockchainRid",
+          "signers.pubKey": address,
+          blockchainRid: currentBlockchain?.rid,
           status: "created",
           limit: 100,
         });
@@ -44,6 +47,10 @@ const AssetTable = () => {
         if (accountsData.length > 0) {
           setSelectedAccount(accountsData[0]);
           await fetchAssets(accountsData[0].id);
+        } else {
+          setSelectedAccount(null);
+          setAssets([]);
+          setIsEmpty(true);
         }
       } catch (error) {
         console.error("Failed to fetch accounts:", error);
@@ -51,7 +58,7 @@ const AssetTable = () => {
     };
 
     fetchAccounts();
-  }, [address]);
+  }, [address, currentBlockchain?.rid]);
 
   const fetchAssets = async (accountId: string) => {
     if (assetCache[accountId]) {

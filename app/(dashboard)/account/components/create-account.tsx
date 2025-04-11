@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils"; // Ensure this path points to your utility fun
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createAccount } from '@/config/api/accounts'; // Import the API function
 import { useAccount } from "wagmi";
+import useBlockchainStore from "@/store/use-blockchain-store";
 
 const schema = z.object({
   name: z.string().min(2, { message: "Account name is required 2." }),
@@ -29,6 +30,7 @@ const CreateAccount = ({ open, onClose, reloadData }: {
   onClose: () => void,
   reloadData: () => void
 }) => {
+  const { currentNetwork, currentBlockchain } = useBlockchainStore();
   const { address: userAddress } = useAccount();
   const [isSigning, setIsSigning] = React.useState(false); // Add isSigning state
   const [isPending, startTransition] = React.useTransition();
@@ -105,6 +107,8 @@ const CreateAccount = ({ open, onClose, reloadData }: {
           signers: signers.filter(s => s.pubKey),
           signaturesRequired: threshold,
           userAddress,
+          blockchainRid: currentBlockchain?.rid,
+          network: currentNetwork,
         });
         toast.success("Successfully added");
         reloadData(); // Reload data after successful creation

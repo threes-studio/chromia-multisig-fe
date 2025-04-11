@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 
 interface CpAddressProps {
   address: string;
-  type: "evm" | "chromia" | "hash";
+  type: "evm" | "account" | "hash" | "blockchain";
   truncate?: boolean;
   explorerUrl?: string; // Base URL for the explorer
 }
@@ -25,14 +25,16 @@ const CpAddress: React.FC<CpAddressProps> = ({
 
   const getTruncatedAddress = (addr: string) => {
     if (!truncate || addr.length <= 10) return addr;
-    return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+    return `${addr.slice(0, 10)}...${addr.slice(-6)}`;
   };
 
   const getExplorerLink = () => {
     switch (type) {
+      case "blockchain":
+        return `${explorerUrl}/${address}`;
       case "evm":
         return `${explorerUrl}/address/${address}`;
-      case "chromia":
+      case "account":
         return `${explorerUrl}/account/${address}`;
       case "hash":
         return `${explorerUrl}/transaction/${address}`;

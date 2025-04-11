@@ -26,9 +26,9 @@ export const menusConfig = {
       icon: Grid,
       child: [
         {
-          title: "home",
+          title: "dashboard",
           icon: DashBoard,
-          href: "/",
+          href: "/dashboard",
         },
         {
           title: "accounts",
@@ -55,9 +55,9 @@ export const menusConfig = {
         icon: Grid,
         child: [
           {
-            title: "home",
+            title: "dashboard",
             icon: DashBoard,
-            href: "/",
+            href: "/dashboard",
           },
           {
             title: "accounts",
@@ -83,9 +83,9 @@ export const menusConfig = {
         title: "Menu",
       },
       {
-        title: "home",
+        title: "dashboard",
         icon: DashBoard,
-        href: "/",
+        href: "/dashboard",
       },
       {
         title: "accounts",

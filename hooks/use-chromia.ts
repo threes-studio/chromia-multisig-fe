@@ -35,9 +35,12 @@ import {
   registerAccount,
   Session,
   aggregateSigners,
+  pendingTransferStrategies,
+  getBalanceByAccountId,
 } from "@chromia/ft4";
 import { ethers, verifyMessage } from 'ethers';
 import { env } from "@/config/env";
+import useBlockchainStore from "@/store/use-blockchain-store";
 
 export type StrategiesType =
   | "basic"
@@ -45,14 +48,28 @@ export type StrategiesType =
   | "fee"
   | "";
 
-const createChromiaClient = async () =>
-  createClient({
-    nodeUrlPool: [env.CHROMIA_URL],
-    blockchainRid: env.BLOCKCHAIN_RID,
-  });
+const TESTNET_NODE_URL = [
+  'https://node0.testnet.chromia.com:7740',
+  'https://node1.testnet.chromia.com:7740',
+  'https://node2.testnet.chromia.com:7740',
+  'https://node3.testnet.chromia.com:7740',
+];
 
-const FEE_ASSET = env.FEE_ASSET_SYMBOL;
-const FEE_ASSET_ID = Buffer.from(env.FEE_ASSET_ID, 'hex');
+const MAINNET_NODE_URL = [
+  'https://chromia-sp.bwarelabs.com:7740',
+  'https://chromia-api.hashkey.cloud:7740',
+];
+
+const createChromiaClient = async () => {
+  const { currentNetwork, currentBlockchain } = useBlockchainStore.getState();
+  const nodeUrlPool = currentNetwork === 'testnet'
+    ? TESTNET_NODE_URL
+    : MAINNET_NODE_URL;
+  return createClient({
+    nodeUrlPool,
+    blockchainRid: currentBlockchain?.rid || 'E592E9C2A048753CB39818B9926A1FD09F4BD02CD673648284356540BC9ADD4E',
+  });
+}
 
 type Web3Error = string | null;
 
@@ -84,18 +101,15 @@ const useChromia = () => {
     return createKeyStoreInteractor(client, evmKeyStore);
   };
 
-  const getPendingTxs = async (accountId: Buffer) => {
-    return await handleWeb3Call(async () => {
+  const getPendingTxs = async (accountId: Buffer): Promise<string[]> => {
+    try {
       const client = await createChromiaClient();
-      const pendings: any = await client.query("get_pending_transfer", {
-        recipient_id: accountId,
-      });
-
-      return pendings.map((item: any) => ({
-        amount: Number(item.amount),
-        assetSymbol: item.asset_symbol,
-      }));
-    });
+      const connection = await createConnection(client);
+      return await connection.query(pendingTransferStrategies(accountId));
+    } catch (error) {
+      console.error("Error getting pending transfers:", error);
+      return [];
+    }
   };
 
   async function getAccountIdForNewAccount(): Promise<Buffer> {
@@ -138,7 +152,7 @@ const useChromia = () => {
     return result ?? null;
   };
 
-  const registerAccountToChromia = async (accountId: string): Promise<Session | null> => {
+  const registerAccountToChromia = async (accountId: string, feeAssetSymbol: string): Promise<Session | null> => {
     if (!accountId) return null;
 
     return await handleWeb3Call(async () => {
@@ -156,7 +170,7 @@ const useChromia = () => {
         throw new Error("No pending transactions found for the account.");
       }
 
-      const asset = await getAssetBySymbol(client, FEE_ASSET);
+      const asset = await getAssetBySymbol(client, feeAssetSymbol);
 
       const { session } = await registerAccount(
         client,
@@ -168,10 +182,11 @@ const useChromia = () => {
     });
   };
 
-  const transferFeeToAccount = async (accountID: string, feeAmount: number = 2): Promise<Boolean> => {
+  const transferFeeToAccount = async (accountID: string, feeAmount: number = 2, feeAssetId: string, feeDecimals: number): Promise<Boolean> => {
     const result = await handleWeb3Call(async () => {
       if (!accountID) throw new Error("Account ID is required.");
 
+      const feeBufferId = Buffer.from(feeAssetId, 'hex');
       const client = await createChromiaClient();
       const evmKeyStoreInteractor = await getEvmKeyStoreInteractor(client);
       const accounts = await evmKeyStoreInteractor.getAccounts();
@@ -184,20 +199,20 @@ const useChromia = () => {
       const session = await evmKeyStoreInteractor.getSession(accounts[0].id);
       const assetBalance = await client.query("ft4.get_asset_balance", {
         account_id: session.account.id,
-        asset_id: FEE_ASSET_ID,
+        asset_id: feeBufferId,
       });
 
       if (!assetBalance) throw new Error("Insufficient balance");
       const { amount: balance } = assetBalance as any;
 
-      const feeInWei = BigInt(feeAmount) * BigInt(10 ** 18);
+      const feeInWei = BigInt(feeAmount) * BigInt(10 ** feeDecimals);
       if (BigInt(balance) < BigInt(feeInWei)) {
         throw new Error("Insufficient balance");
       }
 
       const { receipt } = await session.call({
         name: "ft4.transfer",
-        args: [accountBufferId, FEE_ASSET_ID, feeInWei],
+        args: [accountBufferId, feeBufferId, feeInWei],
       });
 
       return receipt.status === 'confirmed';
@@ -287,11 +302,12 @@ const useChromia = () => {
   async function signCreateMultisigAccount(
     signers: string[],
     signaturesRequired: number,
-    registerAccountOperation: Operation = registerAccountOp()
+    feeAssetSymbol: string,
   ): Promise<Signature> {
     const client = await createChromiaClient();
     const connection = await createConnection(client);
     const evmKeyStore = await createWeb3ProviderEvmKeyStore(window.ethereum);
+    const registerAccountOperation = registerAccountOp();
 
     const multiAD = createMultiSigAuthDescriptorRegistration(
       [AuthFlag.Account, AuthFlag.Transfer],
@@ -300,7 +316,7 @@ const useChromia = () => {
       null,
     );
 
-    const feeAsset = await getAssetBySymbol(client, FEE_ASSET);
+    const feeAsset = await getAssetBySymbol(client, feeAssetSymbol);
 
     const strategy = registrationStrategy.transferFee(feeAsset, multiAD);
     const { strategyOperation } = await strategy.getRegistrationDetails(connection, evmKeyStore);
@@ -313,13 +329,13 @@ const useChromia = () => {
     signatures: Signature[] | string[],
     signers: string[],
     signaturesRequired: number,
-    registerAccountOperation: Operation = registerAccountOp()
+    feeAssetSymbol: string,
   ) {
     const client = await createChromiaClient();
     const connection = await createConnection(client);
     const ownersAddress = new Set(signers.map((key) => Buffer.from(key, "hex")));
     const evmKeyStore = await createWeb3ProviderEvmKeyStore(window.ethereum);
-
+    const registerAccountOperation = registerAccountOp();
 
     const multiAD = createMultiSigAuthDescriptorRegistration(
       [AuthFlag.Account, AuthFlag.Transfer],
@@ -328,7 +344,7 @@ const useChromia = () => {
       null,
     );
 
-    const feeAsset = await getAssetBySymbol(client, FEE_ASSET);
+    const feeAsset = await getAssetBySymbol(client, feeAssetSymbol);
     let strategy = registrationStrategy.transferFee(feeAsset, multiAD);
     const { strategyOperation } = await strategy.getRegistrationDetails(connection, evmKeyStore);
     const registerMessage = await connection.query(registerAccountMessage(strategyOperation, registerAccountOperation));
@@ -484,6 +500,27 @@ const useChromia = () => {
     return gtx.serialize(transaction).toString('hex');
   }
 
+  async function getActiveBlockchains(network: 'testnet' | 'mainnet') {
+    const { currentNetwork } = useBlockchainStore.getState();
+    const chromiaClient = await createClient({
+      nodeUrlPool: currentNetwork === 'testnet'
+        ? TESTNET_NODE_URL
+        : MAINNET_NODE_URL,
+      blockchainIid: 0
+    });
+
+    const data: {
+      name: string;
+      rid: Buffer,
+    }[] = await chromiaClient.query("get_blockchains", {
+      include_inactive: false,
+    });
+
+    return data.map((item) => ({
+      name: item.name,
+      rid: item.rid.toString('hex'),
+    }));
+  }
 
   return {
     checkAccountChromiaExist,
@@ -501,6 +538,7 @@ const useChromia = () => {
     createUpdateAuthDescriptorTx,
 
     transferFeeToAccount,
+    getActiveBlockchains,
 
     isSigning,
     error,

@@ -8,9 +8,13 @@ type SummaryResponse = {
 };
 
 
-export const getSummary = async (): Promise<SummaryResponse> => {
+export const getSummary = async (blockchainRid: string): Promise<SummaryResponse> => {
   try {
-    const response = await api.get("/app/summary");
+    const response = await api.get("/app/summary", {
+      params: {
+        blockchainRid,
+      },
+    });
     return response.data;
   } catch (error: any) {
     return error.response.data;

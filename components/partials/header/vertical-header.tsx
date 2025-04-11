@@ -5,6 +5,7 @@ import { Search } from "lucide-react";
 import { SiteLogo } from "@/components/svg";
 import Link from "next/link";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import NetworkButton from "./network-button";
 
 const MenuBar = ({ collapsed, setCollapsed }: { collapsed: boolean, setCollapsed: (value: boolean) => void; }) => {
   return (
@@ -63,6 +64,7 @@ const VerticalHeader: React.FC<VerticalHeaderProps> = ({ handleOpenSearch }) => 
   const isMobile = useMediaQuery("(min-width: 768px)");
   let LogoContent = null;
   let menuBarContent = null;
+  let networkDisplayContent = null;
   let searchButtonContent = null;
 
   const MainLogo = (
@@ -84,6 +86,13 @@ const VerticalHeader: React.FC<VerticalHeaderProps> = ({ handleOpenSearch }) => 
       </button>
     </div>
   );
+
+  const NetworkDisplay = (
+    <div className="flex items-center gap-2 cursor-pointer">
+      <NetworkButton />
+    </div>
+  );
+
   if (layout === "semibox" && !isDesktop) {
     LogoContent = MainLogo;
   }
@@ -123,12 +132,20 @@ const VerticalHeader: React.FC<VerticalHeaderProps> = ({ handleOpenSearch }) => 
   //   searchButtonContent = SearchButton;
   // }
 
+  if (sidebarType === "module" && isMobile) {
+    networkDisplayContent = NetworkDisplay;
+  }
+  if (sidebarType === "classic" || sidebarType === "popover") {
+    networkDisplayContent = NetworkDisplay;
+  }
+
   return (
     <>
       <div className="flex items-center md:gap-6 gap-3">
         {LogoContent}
         {menuBarContent}
-        {searchButtonContent}
+        {networkDisplayContent}
+        {/* {searchButtonContent} */}
       </div>
     </>
   );

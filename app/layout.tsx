@@ -30,9 +30,7 @@ export default async function RootLayout({
         <TanstackProvider>
           <Providers>
             <DirectionProvider>
-              <DashBoardLayoutProvider>
-                {children}
-              </DashBoardLayoutProvider>
+              {children}
             </DirectionProvider>
           </Providers>
         </TanstackProvider>

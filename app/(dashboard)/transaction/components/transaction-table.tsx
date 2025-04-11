@@ -50,7 +50,7 @@ import { TransactionTableFilter } from "./transaction-table-filter";
 import CreateTransaction from './create-transaction';
 import CpStatus from "@/components/cp-status";
 import { useAccount } from "wagmi";
-
+import useBlockchainStore from "@/store/use-blockchain-store";
 export const statuses = [
   {
     label: "Pending",
@@ -103,6 +103,7 @@ export function TransactionTable({
   const [search, setSearch] = React.useState<string>("");
   const [selectedTransaction, setSelectedTransaction] = React.useState<Transaction | null>(null);
   const { address: userAddress } = useAccount();
+  const { currentBlockchain } = useBlockchainStore();
 
   const toggleRow = (id: string) => {
     if (collapsedRows.includes(id)) {
@@ -127,6 +128,10 @@ export function TransactionTable({
 
   const handleConfirm = async (transaction: Transaction) => {
     setIsSigning(true); // Set isSigning to true when signing starts
+    if (!currentBlockchain || !currentBlockchain.feeSymbol) {
+      toast.error("No fee asset symbol found");
+      return;
+    }
     try {
       if (!userAddress) return;
 
@@ -135,6 +140,7 @@ export function TransactionTable({
         signature = await signCreateMultisigAccount(
           transaction.signers.map(s => s.pubKey),
           transaction.multiSigAccount?.signaturesRequired || 1,
+          currentBlockchain.feeSymbol,
         );
       }
 
@@ -144,8 +150,8 @@ export function TransactionTable({
           Buffer.from(transaction.assetId, 'hex'),
           Buffer.from(transaction.recipient as string, 'hex'),
           {
-            value: BigInt(Math.floor(Number(transaction.amount) * 10 ** 18)),
-            decimals: 18,
+            value: BigInt(Math.floor(Number(transaction.amount) * 10 ** transaction.assetDecimals)),
+            decimals: transaction.assetDecimals,
           } as any,
         );
       }

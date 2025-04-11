@@ -2,6 +2,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import ThemeButton from "./theme-button";
+import NetworkButton from "./network-button";
 import { useSidebar, useThemeStore } from "@/store";
 import ProfileInfo from "./profile-info";
 import VerticalHeader from "./vertical-header";
@@ -16,6 +17,7 @@ import FullScreen from "./full-screen";
 const NavTools = ({ isDesktop, isMobile, sidebarType }: { isDesktop: boolean; isMobile: boolean; sidebarType: string }) => {
   return (
     <div className="nav-tools flex items-center  gap-2">
+      {/* <NetworkButton /> */}
       {isDesktop && <FullScreen />}
       <ThemeButton />
       <div className="ltr:pl-2 rtl:pr-2">
@@ -94,6 +96,7 @@ const Header = ({ handleOpenSearch }: { handleOpenSearch: () => void }) => {
       </ClassicHeader>
     );
   }
+
   if (
     sidebarType !== "module" &&
     navbarType !== "floating" &&
