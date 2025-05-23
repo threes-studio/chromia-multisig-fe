@@ -16,7 +16,7 @@ const CpAddress: React.FC<CpAddressProps> = ({
   address,
   type,
   truncate = true,
-  explorerUrl = "https://explorer.chromia.com/testnet/E592E9C2A048753CB39818B9926A1FD09F4BD02CD673648284356540BC9ADD4E",
+  explorerUrl = "https://explorer.chromia.com/testnet/090BCD47149FBB66F02489372E88A454E7A5645ADDE82125D40DF1EF0C76F874",
 }) => {
   const handleCopy = () => {
     navigator.clipboard.writeText(address);
