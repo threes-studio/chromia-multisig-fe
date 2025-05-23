@@ -1,15 +1,15 @@
 const blockchain = {
+  "feeValue": 10,
   "isActive": true,
-  "name": "Dex cp1",
-  "rid": "E592E9C2A048753CB39818B9926A1FD09F4BD02CD673648284356540BC9ADD4E",
+  "name": "Economy chain",
+  "rid": "090BCD47149FBB66F02489372E88A454E7A5645ADDE82125D40DF1EF0C76F874",
   "network": "testnet",
-  "feeId": "254B2F0A736E74F25AB3D823D7D39208E8A550E08FC65DDE1C50FC4361C2D81A",
-  "feeSymbol": "BUSC",
-  "feeDecimals": 18,
-  "feeValue": 2,
-  "createdAt": "2025-04-10T03:55:33.220Z",
-  "updatedAt": "2025-04-10T03:55:33.220Z",
-  "id": "67f7410c66f271df0519a445"
+  "feeId": "9EF73A786A66F435B3B40E72F5E9D85A4B09815997E087C809913E1E7EC686B4",
+  "feeSymbol": "tCHR",
+  "feeDecimals": 6,
+  "createdAt": "2025-04-23T18:32:27.248Z",
+  "updatedAt": "2025-04-23T18:32:27.248Z",
+  "id": "67f7411d66f271df0519a447"
 };
 
 export type Blockchain = (typeof blockchain);

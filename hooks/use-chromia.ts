@@ -56,8 +56,8 @@ const TESTNET_NODE_URL = [
 ];
 
 const MAINNET_NODE_URL = [
-  'https://chromia-sp.bwarelabs.com:7740',
-  'https://chromia-api.hashkey.cloud:7740',
+  'https://dapps0.chromaway.com:7740',
+  'https://chromia.01node.com:7740',
 ];
 
 const createChromiaClient = async () => {
@@ -67,7 +67,7 @@ const createChromiaClient = async () => {
     : MAINNET_NODE_URL;
   return createClient({
     nodeUrlPool,
-    blockchainRid: currentBlockchain?.rid || 'E592E9C2A048753CB39818B9926A1FD09F4BD02CD673648284356540BC9ADD4E',
+    blockchainRid: currentBlockchain?.rid || '090BCD47149FBB66F02489372E88A454E7A5645ADDE82125D40DF1EF0C76F874',
   });
 }
 

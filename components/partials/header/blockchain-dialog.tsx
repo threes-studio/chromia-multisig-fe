@@ -54,8 +54,9 @@ const BlockchainDialog: React.FC<BlockchainDialogProps> = ({
       setIsLoading(true);
       const response = await getBlockchains({
         limit: 100,
-        filter: 'network',
+        filter: 'network,isActive',
         network: network,
+        isActive: true,
       });
       setLocalBlockchains(response.data);
     } catch (error) {
@@ -200,7 +201,7 @@ const BlockchainDialog: React.FC<BlockchainDialogProps> = ({
                     <div className="flex-1 text-left min-w-0">
                       <div className="font-medium mb-0.5 truncate">{blockchain.name}</div>
                       <div className="text-sm text-muted-foreground">
-                        <CpAddress address={blockchain.rid} type="blockchain" truncate={true} />
+                        <CpAddress address={blockchain.rid} type="blockchain" truncate={true} explorerUrl={`https://explorer.chromia.com/${selectedNetwork}`} />
                       </div>
                     </div>
                     {selectedBlockchain?.rid === blockchain.rid && (
