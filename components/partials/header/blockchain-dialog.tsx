@@ -201,7 +201,7 @@ const BlockchainDialog: React.FC<BlockchainDialogProps> = ({
                     <div className="flex-1 text-left min-w-0">
                       <div className="font-medium mb-0.5 truncate">{blockchain.name}</div>
                       <div className="text-sm text-muted-foreground">
-                        <CpAddress address={blockchain.rid} type="blockchain" truncate={true} explorerUrl={`https://explorer.chromia.com/${selectedNetwork}`} />
+                        <CpAddress address={blockchain.rid} type="blockchain" truncate={true} />
                       </div>
                     </div>
                     {selectedBlockchain?.rid === blockchain.rid && (
