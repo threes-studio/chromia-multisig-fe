@@ -4,6 +4,7 @@ import React from "react";
 import { toast } from "react-hot-toast";
 import { Copy, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import useBlockchainStore from "@/store/use-blockchain-store";
 
 interface CpAddressProps {
   address: string;
@@ -16,8 +17,10 @@ const CpAddress: React.FC<CpAddressProps> = ({
   address,
   type,
   truncate = true,
-  explorerUrl = "https://explorer.chromia.com/testnet/090BCD47149FBB66F02489372E88A454E7A5645ADDE82125D40DF1EF0C76F874",
 }) => {
+  const { currentNetwork, currentBlockchain } = useBlockchainStore();
+  const explorerUrl = `https://explorer.chromia.com/${currentNetwork}`;
+
   const handleCopy = () => {
     navigator.clipboard.writeText(address);
     toast.success("Address copied to clipboard!");
@@ -33,11 +36,11 @@ const CpAddress: React.FC<CpAddressProps> = ({
       case "blockchain":
         return `${explorerUrl}/${address}`;
       case "evm":
-        return `${explorerUrl}/address/${address}`;
+        return `${explorerUrl}/${currentBlockchain?.rid}/address/${address}`;
       case "account":
-        return `${explorerUrl}/account/${address}`;
+        return `${explorerUrl}/${currentBlockchain?.rid}/account/${address}`;
       case "hash":
-        return `${explorerUrl}/transaction/${address}`;
+        return `${explorerUrl}/${currentBlockchain?.rid}/transaction/${address}`;
       default:
         return "#";
     }
