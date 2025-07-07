@@ -42,8 +42,9 @@
     "@radix-ui/react-toggle": "^1.0.3",
     "@radix-ui/react-tooltip": "^1.0.6",
     "@tanstack/react-query": "^5.69.0",
-    "@tanstack/react-table": "^8.9.8",
     "@tanstack/react-query-devtools": "^5.8.3",
+    "@tanstack/react-table": "^8.9.8",
+    "@types/negotiator": "^0.6.3",
     "@types/react-syntax-highlighter": "^15.5.13",
     "autoprefixer": "10.4.15",
     "axios": "^1.6.1",
@@ -63,6 +64,7 @@
     "next-themes": "^0.2.1",
     "nextra": "^2.13.4",
     "nextra-theme-docs": "^2.13.4",
+    "pino-pretty": "^13.0.0",
     "postchain-client": "1.21.1",
     "postcss": "8.4.28",
     "react": "18.2.0",
@@ -82,8 +84,7 @@
     "unist-util-visit": "^5.0.0",
     "wagmi": "^2.14.15",
     "zod": "^3.22.4",
-    "zustand": "^4.4.1",
-    "@types/negotiator": "^0.6.3"
+    "zustand": "^4.4.1"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.2.0",
